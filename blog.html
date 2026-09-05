@@ -17,7 +17,7 @@ layout: base
             <div class='post' data-tags='{% for t in post.tags %}{{ t | slugify }} {% endfor %}'>
                 <div class='post-row'>
                     <p class='post-title'>
-                        <a href="{{ post.url }}">
+                        <a href='{{ post.url }}'>
                             {% katexmm %}
                             {{ post.title }}
                             {% endkatexmm %}

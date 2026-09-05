@@ -48,12 +48,13 @@
         });
     }
 
-    function swap(html, url, scroll) {
+    function swap(html, url, scroll, push) {
         var doc = parser.parseFromString(html, 'text/html');
         var next = doc.getElementById(CONTAINER);
         if (!next) { location.href = url; return; }
 
         document.title = doc.title;
+        if (push) history.pushState({ scroll: 0 }, '', url);
         container.innerHTML = next.innerHTML;
         runScripts(container);
         current = url;
@@ -80,8 +81,7 @@
         var url = link.href;
         history.replaceState({ scroll: window.scrollY }, '');
         load(url).then(function (html) {
-            history.pushState({ scroll: 0 }, '', url);
-            swap(html, url, 0);
+            swap(html, url, 0, true);
         }).catch(function () {
             location.href = url;
         });
