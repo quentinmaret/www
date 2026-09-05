@@ -1,0 +1,58 @@
+---
+title: Yahaha!
+head_title: Yahaha! &middot; Quentin Maret
+description: You found me!
+permalink: /korok/
+sitemap: false
+layout: base
+---
+
+<div id='blog' class='wrap'>
+    <div class='section'>
+        <h1>Yahaha! You found me!</h1>
+        <p>
+            Since you went looking, here's the stuff that didn't make the front page.
+        </p>
+        <p>
+            <i>...still working on this.</i>
+        </p>
+    </div>
+</div>
+
+<audio id='korok-sound' src='/assets/korok.mp3' preload='auto'></audio>
+
+<script>
+(function () {
+    var sound = document.getElementById('korok-sound');
+    if (!sound) return;
+
+    var GESTURES = ['pointerdown', 'keydown', 'touchstart'];
+
+    function disarm() {
+        GESTURES.forEach(function (name) {
+            window.removeEventListener(name, playOnce);
+        });
+    }
+
+    function playOnce() {
+        disarm();
+        if (!document.contains(sound)) return;
+        play();
+    }
+
+    function play() {
+        var attempt = sound.play();
+        return attempt && attempt.catch ? attempt : null;
+    }
+
+    var attempt = play();
+    if (attempt) {
+        attempt.catch(function () {
+            if (!document.contains(sound)) return;
+            GESTURES.forEach(function (name) {
+                window.addEventListener(name, playOnce, { passive: true });
+            });
+        });
+    }
+})();
+</script>

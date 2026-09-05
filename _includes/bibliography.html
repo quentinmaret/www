@@ -1,0 +1,8 @@
+{% capture bibliography %}{% bibliography --cited %}{% endcapture %}
+{% if bibliography contains '<li' %}
+<div id='bibliography'>
+    <div class='wrap'>
+        {{ bibliography }}
+    </div>
+</div>
+{% endif %}

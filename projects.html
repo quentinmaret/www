@@ -1,0 +1,23 @@
+---
+title: Projects
+head_title: Projects &middot; Quentin Maret
+description: Projects by Quentin Maret.
+permalink: /projects/
+layout: base
+---
+
+<div id='blog' class='wrap'>
+    <div class='section'>
+        {% for project in site.projects reversed %}
+            <div class='post'>
+                <div class='post-row'>
+                    <p class='post-title'>
+                        <a href='{{ project.url }}'>{{ project.title }}</a>
+                    </p>
+                    <p class='post-date'>{{ project.date | date: "%B %Y" }}</p>
+                </div>
+                <p class='post-subtitle'>{{ project.subtitle }}</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>

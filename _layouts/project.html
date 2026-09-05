@@ -1,0 +1,37 @@
+---
+layout: base
+---
+
+<div class='content'>
+    <div class='front-matter'>
+        <div class='wrap'>
+            <h1>{{ page.title }}</h1>
+            <h4>{{ page.subtitle }}</h4>
+            <div class='bylines'>
+                {% if page.date %}
+                <div class='byline'>
+                    <h3>Date</h3>
+                    <p class='byline-date'>{{ page.date | date: "%B %Y" }}</p>
+                </div>
+                {% endif %}
+                {% if page.url_external %}
+                <div class='byline'>
+                    <h3>Source</h3>
+                    <p><a href='{{ page.url_external }}'>{{ page.url_external | split: '//' | last }}</a></p>
+                </div>
+                {% endif %}
+                {% if page.stack %}
+                <div class='byline'>
+                    <h3>Stack</h3>
+                    <p>{{ page.stack | join: ' &middot; ' }}</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class='clear'></div>
+        </div>
+    </div>
+    <div class='wrap article'>
+        {{ content }}
+    </div>
+    {% include bibliography.html %}
+</div>

@@ -1,0 +1,113 @@
+<script>
+(function () {
+    var CONTAINER = 'page';
+
+    var container = document.getElementById(CONTAINER);
+    if (!container || !window.history.pushState || !window.fetch ||
+        !window.DOMParser || !Element.prototype.closest) return;
+
+    var parser = new DOMParser();
+    var cache = Object.create(null);
+    var current = location.href;
+
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+    function internal(link) {
+        if (!link || !link.href) return false;
+        if (link.origin !== location.origin) return false;
+        if (link.hasAttribute('download')) return false;
+        if (link.target && link.target !== '_self') return false;
+        var last = link.pathname.split('/').pop();
+        if (last && last.indexOf('.') !== -1 && !/\.html?$/i.test(last)) return false;
+        return true;
+    }
+
+    function load(url) {
+        if (!cache[url]) {
+            cache[url] = fetch(url, { credentials: 'same-origin' })
+                .then(function (res) {
+                    if (!res.ok) throw new Error(res.status);
+                    return res.text();
+                })
+                .catch(function (err) {
+                    delete cache[url];
+                    throw err;
+                });
+        }
+        return cache[url];
+    }
+
+    function runScripts(root) {
+        Array.prototype.forEach.call(root.querySelectorAll('script'), function (old) {
+            var fresh = document.createElement('script');
+            Array.prototype.forEach.call(old.attributes, function (attr) {
+                fresh.setAttribute(attr.name, attr.value);
+            });
+            fresh.textContent = old.textContent;
+            old.parentNode.replaceChild(fresh, old);
+        });
+    }
+
+    function swap(html, url, scroll) {
+        var doc = parser.parseFromString(html, 'text/html');
+        var next = doc.getElementById(CONTAINER);
+        if (!next) { location.href = url; return; }
+
+        document.title = doc.title;
+        container.innerHTML = next.innerHTML;
+        runScripts(container);
+        current = url;
+
+        var hash = url.indexOf('#') === -1 ? '' : url.slice(url.indexOf('#') + 1);
+        var target = hash && document.getElementById(hash);
+        if (target) target.scrollIntoView();
+        else window.scrollTo(0, scroll || 0);
+
+        container.focus({ preventScroll: true });
+    }
+
+    document.addEventListener('click', function (evt) {
+        if (evt.defaultPrevented || evt.button !== 0) return;
+        if (evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.altKey) return;
+
+        var link = evt.target.closest ? evt.target.closest('a') : null;
+        if (!internal(link)) return;
+        if (link.hash && link.pathname === location.pathname) return;
+
+        evt.preventDefault();
+        if (link.href === current) return;
+
+        var url = link.href;
+        history.replaceState({ scroll: window.scrollY }, '');
+        load(url).then(function (html) {
+            history.pushState({ scroll: 0 }, '', url);
+            swap(html, url, 0);
+        }).catch(function () {
+            location.href = url;
+        });
+    });
+
+    window.addEventListener('popstate', function (evt) {
+        var url = location.href;
+        var scroll = evt.state && evt.state.scroll;
+        load(url).then(function (html) {
+            swap(html, url, scroll);
+        }).catch(function () {
+            location.reload();
+        });
+    });
+
+    function prefetch(evt) {
+        var link = evt.target.closest ? evt.target.closest('a') : null;
+        if (internal(link) && link.href !== current) {
+            load(link.href).catch(function () {});
+        }
+    }
+
+    ['mouseover', 'focusin', 'touchstart'].forEach(function (name) {
+        document.addEventListener(name, prefetch, { passive: true });
+    });
+
+    history.replaceState({ scroll: 0 }, '');
+})();
+</script>

@@ -1,0 +1,130 @@
+<script>
+(function () {
+    var IDLE_MS = 1000;
+    var STEP_MS = 50;
+
+    var SEQUENCE = [3, 2, 1, 0];
+    var LAST = SEQUENCE.length - 1;
+
+    var REASSERT_MS = 250;
+    var REASSERT_TIMES = 8;
+
+    var PRIME_MS = 200;
+
+    var root = document.documentElement;
+
+    if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
+
+    var reduce = window.matchMedia &&
+                 window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var idleTimer = null;
+    var stepTimer = null;
+    var reassertTimer = null;
+    var primeTimer = null;
+    var reassertsLeft = 0;
+    var pos = -1;
+    var current = null;
+
+    function setClass(name) {
+        if (current === name) return;
+        if (current) root.classList.remove(current);
+        current = name;
+        if (current) root.classList.add(current);
+    }
+
+    function toggleEndState() {
+        setClass(current === 'cursor-off' ? 'fade-' + SEQUENCE[LAST]
+                                          : 'cursor-off');
+    }
+
+    function reassertTick() {
+        toggleEndState();
+        if (--reassertsLeft > 0) {
+            reassertTimer = setTimeout(reassertTick, REASSERT_MS);
+        }
+    }
+
+    function startReasserting() {
+        if (document.hidden) return;
+        reassertsLeft = REASSERT_TIMES;
+        reassertTimer = setTimeout(reassertTick, REASSERT_MS);
+    }
+
+    function prime() {
+        setClass('cursor-prime');
+        primeTimer = setTimeout(function () {
+            if (current === 'cursor-prime') setClass(null);
+        }, PRIME_MS);
+    }
+
+    function step() {
+        pos++;
+        setClass('fade-' + SEQUENCE[pos]);
+        if (pos < LAST) {
+            stepTimer = setTimeout(step, STEP_MS);
+        } else {
+            startReasserting();
+        }
+    }
+
+    function hide() {
+        clearTimeout(stepTimer);
+        clearTimeout(idleTimer);
+        clearTimeout(reassertTimer);
+        clearTimeout(primeTimer);
+        pos = LAST;
+        setClass('fade-' + SEQUENCE[LAST]);
+        startReasserting();
+    }
+
+    function wake(evt) {
+        if (evt) clearTimeout(primeTimer);
+        clearTimeout(stepTimer);
+        clearTimeout(idleTimer);
+        clearTimeout(reassertTimer);
+        reassertsLeft = 0;
+        pos = -1;
+        setClass(null);
+        idleTimer = setTimeout(reduce ? hide : step, IDLE_MS);
+    }
+
+    function reassertNow() {
+        if (pos === LAST) toggleEndState();
+    }
+
+    ['mousemove', 'mousedown', 'keydown', 'wheel', 'scroll', 'touchstart']
+        .forEach(function (name) {
+            window.addEventListener(name, wake, { passive: true });
+        });
+
+    ['mouseover', 'scroll'].forEach(function (name) {
+        window.addEventListener(name, reassertNow, { passive: true });
+    });
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) hide(); else wake();
+    });
+    window.addEventListener('blur', hide);
+    window.addEventListener('focus', wake);
+
+    window.addEventListener('pagehide', function () {
+        clearTimeout(stepTimer);
+        clearTimeout(idleTimer);
+        clearTimeout(reassertTimer);
+        clearTimeout(primeTimer);
+        reassertsLeft = 0;
+        pos = -1;
+        setClass(null);
+    });
+
+    window.addEventListener('pageshow', function (evt) {
+        if (!evt.persisted) return;
+        wake();
+        prime();
+    });
+
+    wake();
+    prime();
+})();
+</script>

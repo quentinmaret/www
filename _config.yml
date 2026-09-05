@@ -1,0 +1,37 @@
+author: "Quentin Maret"
+description: "Quentin Maret is a Computer Science student at the University of Chicago."
+url: "https://quentinmaret.com"
+permalink: /blog/:year/:month/:day/:title/
+highlighter: rouge
+
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+
+collections:
+  projects:
+    output: true
+    permalink: /projects/:name/
+
+defaults:
+  - scope:
+      type: posts
+    values:
+      layout: post
+  - scope:
+      type: projects
+    values:
+      layout: project
+
+plugins:
+  - jekyll-scholar
+  - jekyll-sitemap
+  - jekyll-katex
+
+katex:
+  js_path: assets
+  rendering_options:
+    throw_error: false
+    error_color: "#cc0000"
